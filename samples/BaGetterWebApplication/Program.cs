@@ -1,6 +1,8 @@
 using BaGetter;
+using BaGetter.Authentication;
 using BaGetter.Web;
 using Microsoft.AspNetCore.Builder;
+using Microsoft.Extensions.DependencyInjection;
 using Microsoft.Extensions.Hosting;
 
 var builder = WebApplication.CreateBuilder();
@@ -10,6 +12,10 @@ builder.Services.AddBaGetterWebApplication(bagetter =>
 {
     bagetter.AddSqliteDatabase();
     bagetter.AddFileStorage();
+});
+builder.Services.AddAuthentication(o =>
+{
+    o.AddScheme(AuthenticationConstants.NugetBasicAuthenticationScheme, _ => { });
 });
 var app = builder.Build();
 
