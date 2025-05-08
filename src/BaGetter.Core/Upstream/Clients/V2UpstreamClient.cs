@@ -4,6 +4,7 @@ using System.IO;
 using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
+using BaGetter.Protocol.Models;
 using Microsoft.Extensions.Logging;
 using Microsoft.Extensions.Options;
 using NuGet.Common;
@@ -145,6 +146,26 @@ public class V2UpstreamClient : IUpstreamClient, IDisposable
         }
     }
 
+    public async Task<SearchResponse> SearchAsync(SearchRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var resource = await _repository.GetResourceAsync<PackageSearchResourceV2Feed>(cancellationToken);
+            INuGetLogger logger = new NullLogger();
+            var packages = await resource.SearchAsync(
+                request.Query, new SearchFilter(request.IncludePrerelease),
+                request.Skip, request.Take, logger, cancellationToken);
+            var result = packages.Select(ToSearchResult).ToList();
+
+            return new SearchResponse { TotalHits = result.Count, Data = result };
+        }
+        catch (Exception e)
+        {
+            // _logger.LogError(e, "Failed to mirror {PackageId}'s upstream versions", id);
+            return new SearchResponse();
+        }
+    }
+
     public void Dispose()
     {
         _cache.Dispose();
@@ -177,6 +198,22 @@ public class V2UpstreamClient : IUpstreamClient, IDisposable
             Tags = package.Tags?.Split(TagsSeparators, StringSplitOptions.RemoveEmptyEntries),
 
             Dependencies = ToDependencies(package)
+        };
+    }
+
+    private SearchResult ToSearchResult(IPackageSearchMetadata package)
+    {
+        return new SearchResult
+        {
+            Version = package.Identity.Version.ToString(),
+            Authors = ParseAuthors(package.Authors),
+            Description = package.Description,
+            Summary = package.Summary,
+            Title = package.Title,
+            IconUrl = package.IconUrl.ToString(),
+            LicenseUrl = package.LicenseUrl.ToString(),
+            ProjectUrl = package.ProjectUrl.ToString(),
+            Tags = package.Tags?.Split(TagsSeparators, StringSplitOptions.RemoveEmptyEntries)
         };
     }
 

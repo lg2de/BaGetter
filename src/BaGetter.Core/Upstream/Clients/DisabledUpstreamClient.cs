@@ -2,6 +2,7 @@
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using BaGetter.Protocol.Models;
 using NuGet.Versioning;
 
 namespace BaGetter.Core;
@@ -30,5 +31,10 @@ public class DisabledUpstreamClient : IUpstreamClient
         CancellationToken cancellationToken)
     {
         return Task.FromResult<Stream>(null);
+    }
+
+    public Task<SearchResponse> SearchAsync(SearchRequest request, CancellationToken cancellationToken)
+    {
+        return Task.FromResult(new SearchResponse{});
     }
 }

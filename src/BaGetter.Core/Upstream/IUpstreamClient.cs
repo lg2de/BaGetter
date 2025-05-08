@@ -3,6 +3,7 @@ using System.Collections.Generic;
 using System.IO;
 using System.Threading;
 using System.Threading.Tasks;
+using BaGetter.Protocol.Models;
 
 namespace BaGetter.Core;
 
@@ -46,4 +47,13 @@ public interface IUpstreamClient
     /// The stream is guaranteed to be seekable if not not null.
     /// </returns>
     Task<Stream> DownloadPackageOrNullAsync(string id, NuGetVersion version, CancellationToken cancellationToken);
+
+    /// <summary>
+    /// Perform a search query.
+    /// </summary>
+    /// <remarks>See: <see href="https://docs.microsoft.com/en-us/nuget/api/search-query-service-resource#search-for-packages"/></remarks>
+    /// <param name="request">The search request.</param>
+    /// <param name="cancellationToken">A token to cancel the task.</param>
+    /// <returns>The search response.</returns>
+    Task<SearchResponse> SearchAsync(SearchRequest request, CancellationToken cancellationToken);
 }

@@ -1,4 +1,5 @@
 using System;
+using System.Linq;
 using System.Threading;
 using System.Threading.Tasks;
 using BaGetter.Authentication;
@@ -13,10 +14,13 @@ namespace BaGetter.Web;
 public class SearchController : Controller
 {
     private readonly ISearchService _searchService;
+    private readonly IUpstreamClient _upstreamClient;
 
-    public SearchController(ISearchService searchService)
+
+    public SearchController(ISearchService searchService, IUpstreamClient upstreamClient)
     {
         _searchService = searchService ?? throw new ArgumentNullException(nameof(searchService));
+        _upstreamClient = upstreamClient ?? throw new ArgumentNullException(nameof(upstreamClient));
     }
 
     public async Task<ActionResult<SearchResponse>> SearchAsync(
@@ -42,7 +46,14 @@ public class SearchController : Controller
             Query = query ?? string.Empty,
         };
 
-        return await _searchService.SearchAsync(request, cancellationToken);
+        var response1 = await _searchService.SearchAsync(request, cancellationToken);
+        var response2 = await _upstreamClient.SearchAsync(request, cancellationToken);
+        var combinedResponse = new SearchResponse
+        {
+            Context = response1.Context, TotalHits = response1.TotalHits + response2.TotalHits,
+            Data = response1.Data.Concat(response2.Data).Distinct().ToList()
+        };
+        return combinedResponse;
     }
 
     public async Task<ActionResult<AutocompleteResponse>> AutocompleteAsync(

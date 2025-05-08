@@ -55,6 +55,20 @@ public class V3UpstreamClient : IUpstreamClient
         }
     }
 
+    public async Task<SearchResponse> SearchAsync(SearchRequest request, CancellationToken cancellationToken)
+    {
+        try
+        {
+            var results = await _client.SearchAsync(request.Query, request.Skip, request.Take, cancellationToken);
+            return new SearchResponse { TotalHits = results.Count, Data = results };
+        }
+        catch (Exception e)
+        {
+            //_logger.LogError(e, "Failed to mirror {PackageId}'s upstream metadata", id);
+            return new SearchResponse();
+        }
+    }
+
     public async Task<IReadOnlyList<Package>> ListPackagesAsync(
         string id,
         CancellationToken cancellationToken)
